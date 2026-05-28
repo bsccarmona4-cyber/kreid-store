@@ -1,0 +1,284 @@
+/* ============================================
+   DOPAMINE OVERLOAD — Efectos de venta
+   Inspiración: psicología de dopamina en e-com
+   ============================================ */
+
+/* ─── HERO ─── */
+.dopamine-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 50%, rgba(220,38,38,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(220,38,38,0.05) 0%, transparent 60%),
+    linear-gradient(135deg, #fafafa 0%, #ffffff 30%, #fef2f2 60%, #fafafa 100%) !important;
+  background-size: 400% 400% !important;
+  animation: gradientShift 8s ease infinite !important;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
+/* ─── PARTÍCULAS FLOTANTES ─── */
+.dopamine-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dopamine-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(220,38,38,0.4), transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particleFloat 6s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(-120px) scale(0); opacity: 0; }
+}
+
+/* ─── FLASH SALE TICKER ─── */
+.flash-sale-ticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: linear-gradient(135deg, #FEE2E2, #FEF3C7);
+  border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--red);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: flashPulse 2s ease infinite;
+}
+
+@keyframes flashPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+}
+
+.flash-sale-ticker svg { animation: firePulse 1s ease infinite; }
+
+@keyframes firePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ─── HERO TITLE ─── */
+.hero-title-dopamine {
+  font-size: 3.2rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -2px !important;
+  line-height: 1.05 !important;
+  margin-bottom: 16px !important;
+}
+
+.hero-title-dopamine .highlight {
+  background: linear-gradient(135deg, var(--red), #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-shimmer {
+  display: inline-block;
+  animation: heroShimmer 2s ease infinite;
+  font-size: 1.4rem;
+}
+
+@keyframes heroShimmer {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  25% { transform: translateY(-5px) rotate(-6deg); opacity: 0.8; }
+  50% { transform: translateY(0) rotate(4deg); opacity: 1; }
+  75% { transform: translateY(-3px) rotate(-3deg); opacity: 0.9; }
+}
+
+/* ─── HERO STATS ─── */
+.hero-stats-dopamine {
+  display: flex;
+  gap: 32px;
+}
+
+.hstat-dopamine { text-align: center; }
+.hstat-dopamine .hstat-val { display: block; font-size: 1.3rem; font-weight: 900; color: var(--dark); display: flex; align-items: center; gap: 4px; justify-content: center; }
+.hstat-dopamine .hstat-lbl { font-size: 0.62rem; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 2px; }
+
+/* ─── LIVE PURCHASES — ELIMINADO ─── */
+
+/* ─── MARQUESINA ─── */
+.offer-marquee {
+  padding: 10px 0;
+  background: var(--dark);
+  overflow: hidden;
+  position: relative;
+}
+
+.offer-marquee::before,
+.offer-marquee::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0;
+  width: 40px; z-index: 1; pointer-events: none;
+}
+.offer-marquee::before { left: 0; background: linear-gradient(90deg, var(--dark), transparent); }
+.offer-marquee::after { right: 0; background: linear-gradient(-90deg, var(--dark), transparent); }
+
+.marquee-track {
+  display: flex;
+  gap: 24px;
+  white-space: nowrap;
+  animation: marqueeScroll 30s linear infinite;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ─── SHIMMER EN CARDS ─── */
+.dopamine-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.dopamine-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.dopamine-shimmer:hover::after {
+  transform: translateX(100%);
+}
+
+/* ─── STOCK WARNING ─── */
+.stock-warning {
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 3px 10px;
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: stockPulse 2s ease infinite;
+  z-index: 2;
+}
+
+@keyframes stockPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.stock-warning svg { animation: firePulse 1s ease infinite; }
+
+/* ─── VIEWING NOW ─── */
+.dopamine-meta-row {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewing-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+.viewing-now svg { color: var(--gold); }
+
+/* ─── SOCIAL DOPAMINE ─── */
+.social-bar-dopamine {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.social-stat-dopamine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+.social-stat-dopamine:hover {
+  border-color: var(--red);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+
+.social-stat-icon { font-size: 1.4rem; flex-shrink: 0; }
+.social-stat-dopamine strong { font-size: 0.82rem; font-weight: 800; color: var(--dark); display: block; }
+.social-stat-dopamine span { font-size: 0.7rem; color: var(--gray-500); }
+.social-stat-dopamine div { display: flex; flex-direction: column; }
+
+/* ─── CENTRAR LAYOUT ─── */
+.section-center-layout { text-align: center; }
+.section-center-layout .section-header-row { flex-direction: column; align-items: center; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 968px) {
+  .hero-title-dopamine { font-size: 2.4rem !important; }
+  .hero-title-dopamine br { display: none; }
+  .hero-stats-dopamine { gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .hstat-dopamine .hstat-val { font-size: 1.1rem; }
+  .flash-sale-ticker { font-size: 0.6rem; }
+  .offer-marquee { padding: 8px 0; }
+  .marquee-track { font-size: 0.6rem; gap: 16px; }
+  .social-bar-dopamine { gap: 12px; }
+}
+
+@media (max-width: 768px) {
+  .hero-title-dopamine { font-size: 1.8rem !important; }
+  .hero-stats-dopamine { gap: 14px; }
+  .hstat-dopamine .hstat-val { font-size: 0.95rem; }
+  .hstat-dopamine .hstat-lbl { font-size: 0.55rem; }
+  .flash-sale-ticker { font-size: 0.55rem; padding: 4px 10px; }
+  .offer-marquee { display: none; }
+  .social-bar-dopamine { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+}
+
+@media (max-width: 480px) {
+  .hero-title-dopamine { font-size: 1.3rem !important; }
+  .hero-stats-dopamine { gap: 8px; }
+  .hstat-dopamine .hstat-val { font-size: 0.78rem; }
+  .hstat-dopamine .hstat-lbl { font-size: 0.48rem; letter-spacing: 0.5px; }
+  .flash-sale-ticker { font-size: 0.48rem; padding: 2px 8px; margin-bottom: 6px; }
+  .social-bar-dopamine { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .social-stat-dopamine { padding: 8px; gap: 8px; }
+  .social-stat-icon { font-size: 1.1rem; }
+
+}

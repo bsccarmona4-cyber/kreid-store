@@ -115,6 +115,20 @@
   gap: 16px;
 }
 
+.nav-account-icon {
+  display: flex;
+  align-items: center;
+  color: var(--gray-500);
+  text-decoration: none;
+  transition: color 0.2s;
+  padding: 6px;
+  border-radius: 8px;
+}
+.nav-account-icon:hover {
+  color: var(--red);
+  background: rgba(220,38,38,0.06);
+}
+
 .cart-link {
   display: flex;
   align-items: center;
@@ -253,58 +267,7 @@
   font-size: 0.75rem;
 }
 
-/* --- Social Proof Popup --- */
-.social-proof-popup {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  z-index: 999;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: var(--shadow-lg);
-  max-width: 280px;
-  animation: fadeInUp 0.4s ease;
-}
-
-.proof-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--red);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-}
-
-.proof-text {
-  line-height: 1.3;
-}
-
-.proof-name {
-  font-weight: 700;
-  font-size: 0.8rem;
-  color: var(--dark);
-}
-
-.proof-action {
-  font-size: 0.75rem;
-  color: var(--gray-500);
-}
-
-.proof-product {
-  font-size: 0.75rem;
-  color: var(--red);
-  font-weight: 600;
-}
+/* --- Social Proof Popup — ELIMINADO --- */
 
 /* --- Product Page Styles (inject here for consistency) --- */
 
@@ -2109,7 +2072,7 @@
   .announcement-bar {
     font-size: 0.6rem;
   }
-  .social-proof-popup {
+
     bottom: 12px;
     left: 12px;
     right: 12px;

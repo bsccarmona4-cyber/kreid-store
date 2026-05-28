@@ -1,6 +1,7 @@
 import '../styles/landing.css'
+import '../styles/dopamine.css'
 import { Link } from 'react-router-dom'
-import { Star, Truck, Shield, Zap, Package, Sparkles, ChevronRight, ArrowRight, ShoppingCart } from 'lucide-react'
+import { Star, Truck, Shield, Zap, Package, Sparkles, ChevronRight, ArrowRight, ShoppingCart, Flame, Eye, Bolt } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCart } from '../contexts/CartContext'
 
@@ -30,6 +31,7 @@ export default function Home() {
   const { addItem } = useCart()
   const intervalRef = useRef(null)
 
+
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % heroProducts.length)
@@ -37,20 +39,44 @@ export default function Home() {
     return () => clearInterval(intervalRef.current)
   }, [])
 
+  // Partículas flotantes
+  useEffect(() => {
+    const particles = document.querySelector('.dopamine-particles')
+    if (!particles) return
+    const count = 10
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div')
+      p.className = 'dopamine-particle'
+      p.style.left = `${Math.random() * 100}%`
+      p.style.bottom = `${Math.random() * 30}%`
+      p.style.animationDelay = `${Math.random() * 6}s`
+      p.style.animationDuration = `${4 + Math.random() * 4}s`
+      p.style.width = `${3 + Math.random() * 4}px`
+      p.style.height = p.style.width
+      particles.appendChild(p)
+    }
+  }, [])
+
+
+
   const handleQuickAdd = (p, e) => {
     e.preventDefault()
     e.stopPropagation()
     addItem({ id: p.id, name: p.name, price: p.price, image: p.image, quantity: 1 })
   }
 
+
+
   return (
     <div className="home-page">
       {/* ═══ HERO SPLIT ═══ */}
-      <section className="home-hero">
+      <section className="home-hero dopamine-hero">
+        <div className="dopamine-particles" />
         <div className="container">
           <div className="hero-split">
             <div className="hero-left">
-              <div className="hero-badge">🏆 Trusted by 500+ drivers</div>
+              <div className="flash-sale-ticker"><Flame size={14} /> FREE SHIPPING OVER $45</div>
+              <div className="hero-badge"><Bolt size={14} /> Trusted by 1,200+ drivers</div>
               <h1>Gear Up Your<br />Ride for Less</h1>
               <p>Premium car accessories at unbeatable prices. Free shipping on orders over $45. Ships from US warehouse in 5-8 days.</p>
               <div className="hero-actions">
@@ -91,6 +117,24 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+
+
+      {/* ═══ MARQUESINA ═══ */}
+      <div className="offer-marquee">
+        <div className="marquee-track">
+          <span>🚚 FREE SHIPPING OVER $45</span><span className="marquee-dot">•</span>
+          <span>⚡ SHIPS FROM US WAREHOUSE</span><span className="marquee-dot">•</span>
+          <span>🎉 30-DAY HAPPINESS GUARANTEE</span><span className="marquee-dot">•</span>
+          <span>🔥 BEST PRICE GUARANTEE</span><span className="marquee-dot">•</span>
+          <span>📦 5-8 DAY DELIVERY</span><span className="marquee-dot">•</span>
+          <span>🚚 FREE SHIPPING OVER $45</span><span className="marquee-dot">•</span>
+          <span>⚡ SHIPS FROM US WAREHOUSE</span><span className="marquee-dot">•</span>
+          <span>🎉 30-DAY HAPPINESS GUARANTEE</span><span className="marquee-dot">•</span>
+          <span>🔥 BEST PRICE GUARANTEE</span><span className="marquee-dot">•</span>
+          <span>📦 5-8 DAY DELIVERY</span>
+        </div>
+      </div>
 
       {/* ═══ FEATURES ═══ */}
       <section className="home-features">
@@ -261,20 +305,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ CTA ═══ */}
-      <section className="home-section home-section-cta">
-        <div className="container">
-          <div className="cta-box">
-            <h2>Ready to Upgrade Your Ride?</h2>
-            <p>Premium car accessories, shipped from US warehouse. Free shipping over $45.</p>
-            <div className="cta-buttons">
-              <Link to="/products" className="btn btn-primary btn-lg">Shop All Products</Link>
-              <Link to="/products/jump-starter" className="btn btn-outline btn-lg">View Jump Starters</Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ═══ FOOTER SOCIAL ═══ */}
       <section className="home-section home-section-social" style={{ padding: '20px 0', background: 'var(--gray-50)' }}>
         <div className="container">
@@ -286,6 +316,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+
     </div>
   )
 }

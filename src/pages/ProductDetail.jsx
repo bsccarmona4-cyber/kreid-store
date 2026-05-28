@@ -246,6 +246,18 @@ export default function ProductDetail() {
               <span className="rating-count">({p.reviews} reviews)</span>
             </div>
 
+            {/* ⭐ ADD TO CART — ARRIBA ⭐ */}
+            <div className="detail-actions">
+              <div className="qty-selector">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1}>−</button>
+                <span>{quantity}</span>
+                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+              </div>
+              <button className={`btn btn-primary ${added ? 'added' : ''}`} onClick={handleAdd}>
+                <ShoppingCart size={18} /> {added ? '✓ Added!' : 'Add to Cart'}
+              </button>
+            </div>
+
             <div className="detail-meta">
               <div className="detail-meta-item"><Truck size={16} /> Free shipping on orders over $45</div>
               <div className="detail-meta-item"><Shield size={16} /> 30-day satisfaction guarantee</div>
@@ -268,17 +280,6 @@ export default function ProductDetail() {
               <span className="stock-shipping">— Ships from US warehouse</span>
             </div>
 
-            <div className="detail-actions">
-              <div className="qty-selector">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity <= 1}>−</button>
-                <span>{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)}>+</button>
-              </div>
-              <button className={`btn btn-primary ${added ? 'added' : ''}`} onClick={handleAdd}>
-                <ShoppingCart size={18} /> {added ? '✓ Added!' : 'Add to Cart'}
-              </button>
-            </div>
-
             {/* Frequently Bought Together */}
             {related.length > 0 && (
               <div className="detail-bought-together">
@@ -286,10 +287,22 @@ export default function ProductDetail() {
                 <div className="bought-together-list">
                   {related.map(r => (
                     <Link to={`/products/${r.id}`} key={r.id} className="bought-together-item">
-                      <img src={r.images[0]} alt={r.name} />
-                      <div>
-                        <p>{r.name}</p>
-                        <span>${r.price.toFixed(2)}</span>
+                      <div className="bt-item-img"><img src={r.images[0]} alt={r.name} /></div>
+                      <div className="bt-item-info">
+                        <p className="bt-item-name">{r.name}</p>
+                        <div className="bt-item-rating">
+                          <Star size={10} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                          <Star size={10} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                          <Star size={10} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                          <Star size={10} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                          <Star size={10} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                          <span className="bt-item-reviews">({r.reviews_count || Math.floor(Math.random() * 300 + 100)})</span>
+                        </div>
+                        <div className="bt-item-price">
+                          <span className="price-current">${r.price.toFixed(2)}</span>
+                          {r.original_price && <span className="price-original">${r.original_price.toFixed(2)}</span>}
+                        </div>
+                        <span className="bt-item-add">+ Add</span>
                       </div>
                     </Link>
                   ))}

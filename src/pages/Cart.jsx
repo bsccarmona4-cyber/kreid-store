@@ -3,10 +3,7 @@ import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, ChevronLeft, Tr
 import { useCart } from '../contexts/CartContext'
 import { CURRENCY, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/stripe'
 
-const related = [
-  { id: '3', name: 'Noise Canceling Headphones', price: 89.99, original_price: 129.99, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80' },
-  { id: '4', name: 'Portable Bluetooth Speaker', price: 79.99, original_price: 99.99, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=200&q=80' },
-]
+const related = []
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCart()
@@ -26,21 +23,7 @@ export default function Cart() {
             </Link>
           </div>
 
-          <div className="cart-empty-related">
-            <h3>You might like</h3>
-            <div className="related-mini-grid">
-              {related.map(r => (
-                <Link to={`/products/${r.id}`} key={r.id} className="related-mini-card">
-                  <img src={r.image} alt={r.name} />
-                  <p>{r.name}</p>
-                  <div className="related-price-row">
-                    <span className="price-current">${r.price.toFixed(2)}</span>
-                    <span className="price-original">${r.original_price.toFixed(2)}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
     )
@@ -108,22 +91,6 @@ export default function Cart() {
               ))}
             </div>
 
-            {/* Related products */}
-            <div className="cart-related-section">
-              <h3><Sparkles size={16} /> Add more to your order</h3>
-              <div className="related-mini-grid">
-                {related.map(r => (
-                  <Link to={`/products/${r.id}`} key={r.id} className="related-mini-card">
-                    <img src={r.image} alt={r.name} />
-                    <p>{r.name}</p>
-                    <div className="related-price-row">
-                      <span className="price-current">${r.price.toFixed(2)}</span>
-                      <span className="price-original">${r.original_price.toFixed(2)}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* DERECHA: SUMMARY */}

@@ -24,47 +24,13 @@ function AnnouncementBar() {
   )
 }
 
-function SocialProofPopup() {
-  const [visible, setVisible] = useState(false)
-  const [name, setName] = useState('')
-  const [product, setProduct] = useState('')
 
-  const names = ['Mike D.', 'Sarah K.', 'Tom B.', 'Alex W.', 'David H.', 'Laura M.', 'Jordan F.', 'Kevin J.']
-  const products = ['CD Slot Phone Mount', 'Car Charger 36W', 'Air Vent Holder', 'Trunk Organizer', 'Jump Starter', 'Magnetic Mount']
-
-  useEffect(() => {
-    const show = () => {
-      setName(names[Math.floor(Math.random() * names.length)])
-      setProduct(products[Math.floor(Math.random() * products.length)])
-      setVisible(true)
-      setTimeout(() => setVisible(false), 4000)
-    }
-    const first = setTimeout(show, 5000)
-    const interval = setInterval(() => {
-      if (Math.random() > 0.4) show()
-    }, 15000 + Math.random() * 15000)
-    return () => { clearTimeout(first); clearInterval(interval) }
-  }, [])
-
-  if (!visible) return null
-
-  return (
-    <div className="social-proof-popup">
-      <div className="proof-avatar">{name[0]}</div>
-      <div className="proof-text">
-        <p className="proof-name">{name}</p>
-        <p className="proof-action">just purchased</p>
-        <p className="proof-product">{product}</p>
-      </div>
-    </div>
-  )
-}
 
 export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [cartBounce, setCartBounce] = useState(false)
-  const { items, totalPrice } = useCart()
+  const { items, totalItems, totalPrice } = useCart()
   const location = useLocation()
 
   useEffect(() => {
@@ -102,11 +68,14 @@ export default function Layout() {
           </div>
 
           <div className="nav-actions">
+            <Link to="/account" className="nav-account-icon" title="My Account">
+              <User size={20} />
+            </Link>
             <Link to="/cart" className="cart-link">
               <div className={`cart-icon ${cartBounce ? 'bounce' : ''}`}>
                 <ShoppingCart size={20} />
-                {items.length > 0 && (
-                  <span className="cart-count-badge">{items.length}</span>
+                {totalItems > 0 && (
+                  <span className="cart-count-badge">{totalItems}</span>
                 )}
               </div>
               {totalPrice > 0 && (
@@ -128,7 +97,8 @@ export default function Layout() {
             <div className="container">
               <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
               <Link to="/products" onClick={() => setMenuOpen(false)}>Shop All</Link>
-              <Link to="/cart" onClick={() => setMenuOpen(false)}>Cart {items.length > 0 && `(${items.length})`}</Link>
+              <Link to="/account" onClick={() => setMenuOpen(false)}>My Account</Link>
+              <Link to="/cart" onClick={() => setMenuOpen(false)}>Cart {totalItems > 0 && `(${totalItems})`}</Link>
             </div>
           </div>
         )}
@@ -138,7 +108,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <SocialProofPopup />
+
 
       <footer className="footer">
         <div className="container footer-inner">
@@ -148,6 +118,7 @@ export default function Layout() {
           </div>
           <div className="footer-links">
             <Link to="/products">Shop All</Link>
+            <Link to="/account">My Account</Link>
             <Link to="/cart">Cart</Link>
             <Link to="/">Home</Link>
           </div>

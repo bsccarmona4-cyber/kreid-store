@@ -17,6 +17,7 @@ import './styles/global.css'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
+      <AuthProvider>
       <CartProvider>
         <Toaster position="top-right" toastOptions={{
           duration: 3000,
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           </Route>
         </Routes>
       </CartProvider>
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 )

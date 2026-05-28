@@ -16,15 +16,16 @@ function loadCart() {
 function cartReducer(state, action) {
   switch (action.type) {
     case 'ADD_ITEM': {
+      const qty = action.product.quantity || 1
       const existing = state.find(item => item.id === action.product.id)
       if (existing) {
         return state.map(item =>
           item.id === action.product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + qty }
             : item
         )
       }
-      return [...state, { ...action.product, quantity: 1 }]
+      return [...state, { ...action.product, quantity: qty }]
     }
     case 'REMOVE_ITEM':
       return state.filter(item => item.id !== action.id)

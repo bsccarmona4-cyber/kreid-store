@@ -1,138 +1,105 @@
--- ============================================================
--- 🚀 KREID — Supabase Schema Completo
--- ============================================================
+-- ============================================
+-- 🗄️ KREID — Supabase Database Schema
+-- Tables: products, orders, order_items, profiles
+-- ============================================
 
--- 1. TABLA: products
+-- Products table
 CREATE TABLE IF NOT EXISTS products (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  description TEXT,
   price DECIMAL(10,2) NOT NULL,
   original_price DECIMAL(10,2),
-  category TEXT,
-  subcategory TEXT,
+  description TEXT NOT NULL,
+  features TEXT[] DEFAULT '{}',
+  category TEXT NOT NULL DEFAULT 'Car Accessories',
   badge TEXT,
-  images TEXT[], -- array de URLs
-  features TEXT[], -- array de strings
-  rating DECIMAL(2,1) DEFAULT 5.0,
+  rating DECIMAL(2,1) DEFAULT 0,
   reviews_count INTEGER DEFAULT 0,
-  sku TEXT UNIQUE,
-  cj_product_id TEXT,
-  cj_variant_id TEXT,
-  weight_grams INTEGER,
-  warehouse TEXT DEFAULT 'US',
-  free_shipping BOOLEAN DEFAULT false,
-  stock BOOLEAN DEFAULT true,
-  shipping_days TEXT DEFAULT '3-7',
-  tags TEXT[], -- para búsqueda
-  is_active BOOLEAN DEFAULT true,
+  stock INTEGER DEFAULT 0,
+  sku TEXT UNIQUE NOT NULL,
+  shipping_days TEXT DEFAULT '5-8',
+  images_count INTEGER DEFAULT 5,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. TABLA: product_relations (complementos / upsells)
-CREATE TABLE IF NOT EXISTS product_relations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  related_product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  relation_type TEXT CHECK (relation_type IN ('complement', 'upsell', 'crossell', 'alternative')),
-  priority INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(product_id, related_product_id)
+-- Profiles (synced from auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
+  email TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. TABLA: orders
+-- Orders
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  email TEXT,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending','processing','shipped','delivered','cancelled')),
   total DECIMAL(10,2) NOT NULL,
-  subtotal DECIMAL(10,2) NOT NULL,
   shipping DECIMAL(10,2) DEFAULT 0,
-  discount DECIMAL(10,2) DEFAULT 0,
-  coupon_code TEXT,
+  subtotal DECIMAL(10,2) NOT NULL,
   shipping_address JSONB,
-  payment_method TEXT,
-  stripe_payment_id TEXT,
-  cj_order_id TEXT,
-  items JSONB, -- array de {product_id, name, price, quantity, image}
+  stripe_session_id TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. TABLA: coupons
-CREATE TABLE IF NOT EXISTS coupons (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  code TEXT UNIQUE NOT NULL,
-  discount_percent INTEGER DEFAULT 0,
-  discount_amount DECIMAL(10,2) DEFAULT 0,
-  min_purchase DECIMAL(10,2) DEFAULT 0,
-  max_uses INTEGER DEFAULT 1,
-  used_count INTEGER DEFAULT 0,
-  expires_at TIMESTAMPTZ,
-  is_active BOOLEAN DEFAULT true,
+-- Order items
+CREATE TABLE IF NOT EXISTS order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  product_id TEXT REFERENCES products(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. TABLA: reviews
-CREATE TABLE IF NOT EXISTS reviews (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  user_name TEXT,
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-  text TEXT,
-  is_verified BOOLEAN DEFAULT false,
-  is_featured BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- ============================================
+-- 🔒 ROW LEVEL SECURITY
+-- ============================================
+
+-- Products: anyone can read
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Products are public" ON products FOR SELECT USING (true);
+CREATE POLICY "Only admins can insert" ON products FOR INSERT WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "Only admins can update" ON products FOR UPDATE USING (auth.role() = 'service_role');
+
+-- Profiles: users can read/update their own
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Orders: users can view own, admins can view all
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admins can manage all orders" ON orders FOR ALL USING (auth.role() = 'service_role');
+
+-- Order items
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own items" ON order_items FOR SELECT USING (
+  EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert own items" ON order_items FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
 );
 
--- 6. TABLA: cart_abandoned (para recuperación)
-CREATE TABLE IF NOT EXISTS cart_abandoned (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT,
-  items JSONB,
-  total DECIMAL(10,2),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  recovered BOOLEAN DEFAULT false
-);
+-- Auto-create profile on signup
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email)
+  VALUES (NEW.id, NEW.email);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- ============================================================
--- ÍNDICES
--- ============================================================
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-CREATE INDEX IF NOT EXISTS idx_products_price ON products(price);
-CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
-CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
-CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
-
--- ============================================================
--- FUNCIONES
--- ============================================================
-CREATE OR REPLACE FUNCTION get_complementary_products(p_product_id UUID, p_limit INTEGER DEFAULT 3)
-RETURNS TABLE (
-  id UUID,
-  name TEXT,
-  price DECIMAL,
-  category TEXT,
-  images TEXT[],
-  relation_type TEXT
-) LANGUAGE SQL AS $$
-  SELECT p.id, p.name, p.price, p.category, p.images, pr.relation_type
-  FROM product_relations pr
-  JOIN products p ON p.id = pr.related_product_id
-  WHERE pr.product_id = p_product_id AND p.is_active = true
-  ORDER BY pr.priority
-  LIMIT p_limit;
-$$;
-
--- ============================================================
--- SEED DATA: Cupón de bienvenida
--- ============================================================
-INSERT INTO coupons (code, discount_percent, max_uses, expires_at)
-VALUES ('WELCOME10', 10, 1, NOW() + INTERVAL '10 minutes')
-ON CONFLICT (code) DO NOTHING;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();

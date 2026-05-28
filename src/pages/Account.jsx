@@ -55,7 +55,7 @@ export default function Account() {
             </div>
             <h2>{isLogin ? 'Welcome back' : 'Create your account'}</h2>
             <p className="account-auth-sub">
-              {isLogin ? 'Sign in to view your orders and account details.' : 'Sign up to get 10% off your first order.'}
+              {isLogin ? 'Sign in to view your orders and account details.' : 'Sign up to track your orders and manage your account.'}
             </p>
 
             <form onSubmit={handleAuth} className="account-auth-form">
