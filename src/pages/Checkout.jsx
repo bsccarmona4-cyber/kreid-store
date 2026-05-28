@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CreditCard, Lock, ChevronLeft, Package, Shield, Clock } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
 import { CURRENCY, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/stripe'
+import { trackBeginCheckout, trackPurchase } from '../lib/analytics'
 
 export default function Checkout() {
   const { items, totalPrice } = useCart()
   const navigate = useNavigate()
   const [processing, setProcessing] = useState(false)
+  const [purchaseTracked, setPurchaseTracked] = useState(false)
   const [form, setForm] = useState({
     email: '',
     name: '',
@@ -24,9 +26,24 @@ export default function Checkout() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  // Track begin_checkout al cargar
+  useEffect(() => {
+    const checkoutItems = items.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }))
+    trackBeginCheckout(checkoutItems, total)
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setProcessing(true)
+    if (!purchaseTracked) {
+      trackPurchase('pending_' + Date.now(), items, total, shipping)
+      setPurchaseTracked(true)
+    }
 
     try {
       // Construir line items para Stripe Checkout Session

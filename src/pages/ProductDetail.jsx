@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Star, Truck, Shield, Check, Minus, Plus, ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import { trackViewItem, trackAddToCart } from '../lib/analytics'
 
 const productData = {
   'phone-mount-cd': {
@@ -190,8 +191,14 @@ export default function ProductDetail() {
   const prevImage = () => setSelectedImage(prev => (prev === 0 ? p.images.length - 1 : prev - 1))
   const nextImage = () => setSelectedImage(prev => (prev === p.images.length - 1 ? 0 : prev + 1))
 
+  // Track product view
+  useEffect(() => {
+    trackViewItem(p)
+  }, [p.id])
+
   const handleAdd = () => {
     addItem({ id: p.id, name: p.name, price: p.price, image: p.images[0], quantity })
+    trackAddToCart(p, quantity)
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }

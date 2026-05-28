@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Star, Truck, Shield, Zap, Package, Sparkles, ChevronRight, ArrowRight, ShoppingCart, Flame, Eye, Bolt } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCart } from '../contexts/CartContext'
+import { trackViewItem, trackAddToCart } from '../lib/analytics'
 
 const heroProducts = [
   { id: 'phone-mount-cd', name: 'CD Slot Phone Mount', price: 33.35, original_price: null, rating: 4.6, reviews: 547, image: 'https://images.unsplash.com/photo-1617814065895-b17e6e3a41de?w=400&q=80', badge: null },
@@ -63,6 +64,7 @@ export default function Home() {
     e.preventDefault()
     e.stopPropagation()
     addItem({ id: p.id, name: p.name, price: p.price, image: p.image, quantity: 1 })
+    trackAddToCart(p, 1)
   }
 
 

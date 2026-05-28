@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Star, ChevronDown, ShoppingCart } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import { trackSearch, trackAddToCart } from '../lib/analytics'
 
 const allProducts = [
   { id: 'phone-mount-cd', name: 'CD Slot Phone Mount', price: 33.35, original_price: null, rating: 4.6, reviews: 547, image: 'https://images.unsplash.com/photo-1617814065895-b17e6e3a41de?w=400&q=80', category: 'Phone Mounts', badge: 'Best Seller' },
@@ -21,6 +22,14 @@ export default function Products() {
   const [category, setCategory] = useState('All')
   const [sort, setSort] = useState('default')
   const { addItem } = useCart()
+
+  // Track search queries
+  useEffect(() => {
+    if (search.length >= 2) {
+      const debounce = setTimeout(() => trackSearch(search), 500)
+      return () => clearTimeout(debounce)
+    }
+  }, [search])
 
   let filtered = allProducts.filter(p => {
     if (category !== 'All' && p.category !== category) return false

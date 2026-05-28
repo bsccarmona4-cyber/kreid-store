@@ -1,12 +1,22 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, ChevronLeft, Truck, Shield, Clock, Star, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useCart } from '../contexts/CartContext'
 import { CURRENCY, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/stripe'
+import { trackViewCart } from '../lib/analytics'
 
 const related = []
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCart()
+  const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const total = totalPrice + shipping
+
+  useEffect(() => {
+    if (items.length > 0) {
+      trackViewCart(items, total)
+    }
+  }, [items.length])
 
   if (items.length === 0) {
     return (

@@ -5,24 +5,23 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Package, Shield, Truck, Clock } from 'lucide-react'
+import { useCart } from '../contexts/CartContext'
+import { trackPurchase } from '../lib/analytics'
 
 export default function Success() {
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [countdown, setCountdown] = useState(15)
+  const { items, totalPrice, clearCart } = useCart()
 
+  // Track purchase + clear cart on mount
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+    if (sessionId && items.length > 0) {
+      const shipping = totalPrice >= 45 ? 0 : 4.99
+      trackPurchase(sessionId, items, totalPrice + shipping, shipping)
+      clearCart()
+    }
+  }, [sessionId])
 
   return (
     <div className="success-page">
