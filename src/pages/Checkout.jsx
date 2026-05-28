@@ -51,7 +51,7 @@ export default function Checkout() {
           shipping_cost: Math.round(shipping * 100),
           email: form.email,
           customer_name: form.name,
-          success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${window.location.origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/checkout`,
         }),
       })

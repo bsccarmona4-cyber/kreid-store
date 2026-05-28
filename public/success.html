@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KREID — Payment Successful</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f8f8f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
+    .checkmark { width: 80px; height: 80px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    .checkmark svg { width: 40px; height: 40px; stroke: white; stroke-width: 3; fill: none; }
+    h1 { font-size: 28px; color: #1a1a1a; margin-bottom: 8px; font-weight: 700; }
+    p { color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 8px; }
+    .order-id { background: #f0f0f0; padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #888; display: inline-block; margin: 16px 0; }
+    .btn { display: inline-block; padding: 14px 32px; background: #DC2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; margin-top: 24px; transition: background 0.2s; }
+    .btn:hover { background: #b91c1c; }
+    .benefits { display: flex; gap: 24px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+    .benefit { display: flex; align-items: center; gap: 6px; color: #888; font-size: 13px; }
+    .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="checkmark">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h1>Payment Successful! 🎉</h1>
+    <p>Thank you for your order. Your payment has been processed successfully.</p>
+    <p style="color: #999; font-size: 14px;">You'll receive a confirmation email shortly with your order details.</p>
+    <div class="order-id" id="orderDisplay">Order confirmed</div>
+
+    <div class="benefits">
+      <div><span class="emoji">📦</span>Ships in 5-8 days</div>
+      <div><span class="emoji">🛡️</span>30-day guarantee</div>
+      <div><span class="emoji">🚚</span>Free shipping $45+</div>
+    </div>
+
+    <a href="/" class="btn">Continue Shopping</a>
+  </div>
+
+  <script>
+    // Extract session_id from URL
+    const params = new URLSearchParams(window.location.search)
+    const sessionId = params.get('session_id')
+    if (sessionId) {
+      document.getElementById('orderDisplay').textContent = 'Order: ' + sessionId.replace('cs_test_', '#')
+    }
+  </script>
+</body>
+</html>
