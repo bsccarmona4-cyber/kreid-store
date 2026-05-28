@@ -1,10 +1,5 @@
 // 🏪 KREID — Stripe Checkout Session (Vercel Serverless)
-// https://vercel.com/docs/functions
-// Este archivo se deploya automáticamente cuando pusheas a GitHub
-// con Vercel conectado. 
-//
 // Endpoint: POST /api/create-checkout-session
-// URL final: https://tu-dominio.vercel.app/api/create-checkout-session
 
 import Stripe from 'stripe';
 
@@ -22,11 +17,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // ─── Config ────────────────────────────────────
+  // ─── Config desde env vars ─────────────────────
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
 
   if (!stripeKey) {
+    console.error('❌ STRIPE_SECRET_KEY no configurada');
     return res.status(500).json({ error: 'Stripe key not configured' });
   }
 
@@ -41,14 +37,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No items in cart' });
     }
 
-    // Validar line_items
+    // Validar estructura de line_items
     for (const item of line_items) {
       if (!item.price_data?.currency || !item.price_data?.unit_amount || !item.quantity) {
         return res.status(400).json({ error: 'Invalid line item structure' });
       }
     }
 
-    // Crear Checkout Session
+    console.log(`📦 Creating checkout session for ${line_items.length} items...`);
+
+    // Crear la sesión de checkout en Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -87,7 +85,8 @@ export default async function handler(req, res) {
       },
     });
 
-    console.log(`✅ Checkout session: ${session.id} — $${(session.amount_total / 100).toFixed(2)}`);
+    console.log(`✅ Checkout session created: ${session.id} — $${(session.amount_total / 100).toFixed(2)}`);
+
     return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (err) {
     console.error('❌ Stripe error:', err.message);

@@ -29,3 +29,4 @@ npm-debug.log*
 
 # Stripe local server (ya no se usa - reemplazado por Vercel/Supabase Functions)
 server/
+.vercel
