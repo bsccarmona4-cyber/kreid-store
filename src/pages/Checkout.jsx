@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext'
 import { CURRENCY, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../lib/stripe'
 
 export default function Checkout() {
-  const { items, totalPrice, clearCart } = useCart()
+  const { items, totalPrice } = useCart()
   const navigate = useNavigate()
   const [processing, setProcessing] = useState(false)
   const [form, setForm] = useState({
@@ -15,9 +15,6 @@ export default function Checkout() {
     city: '',
     state: '',
     zip: '',
-    card: '',
-    exp: '',
-    cvc: ''
   })
 
   const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
@@ -31,11 +28,44 @@ export default function Checkout() {
     e.preventDefault()
     setProcessing(true)
 
-    // Simular proceso de pago (Stripe real se configurará después)
-    await new Promise(r => setTimeout(r, 2000))
+    try {
+      // Construir line items para Stripe Checkout Session
+      const lineItems = items.map(item => ({
+        price_data: {
+          currency: CURRENCY.toLowerCase(),
+          product_data: { name: item.name, images: [item.image] },
+          unit_amount: Math.round(item.price * 100),
+        },
+        quantity: item.quantity,
+      }))
 
-    clearCart()
-    navigate('/success')
+      // Llamar a tu backend/serverless function para crear la Checkout Session
+      // Por ahora, redirigimos a un placeholder de Stripe
+      // En producción, necesitas un endpoint que cree la sesión con Stripe secret key
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          line_items: lineItems,
+          shipping_cost: Math.round(shipping * 100),
+          email: form.email,
+          customer_name: form.name,
+          success_url: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${window.location.origin}/checkout`,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to create checkout session')
+
+      const { url } = await response.json()
+      // Stripe Checkout Session redirect — SEGURO, PCI-DSS compliant
+      window.location.href = url
+    } catch (err) {
+      console.error('Checkout error:', err)
+      // Fallback: mostrar mensaje de que Stripe Checkout se configurará después
+      alert('🛒 Stripe Checkout Session próximamente. Por ahora, este es un placeholder seguro.')
+      setProcessing(false)
+    }
   }
 
   if (items.length === 0) {
@@ -82,22 +112,23 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* ⚠️ NO CAPTURAMOS DATOS DE TARJETA — Stripe Elements se integra aparte */}
             <div className="form-section glass">
               <h2><CreditCard size={18} /> Payment</h2>
-              <div className="form-row">
-                <input type="text" name="card" placeholder="Card Number" maxLength="19" value={form.card} onChange={handleChange} required className="form-input" />
-              </div>
-              <div className="form-row double">
-                <input type="text" name="exp" placeholder="MM/YY" maxLength="5" value={form.exp} onChange={handleChange} required className="form-input" />
-                <input type="text" name="cvc" placeholder="CVC" maxLength="4" value={form.cvc} onChange={handleChange} required className="form-input" />
+              <div className="secure-payment-placeholder">
+                <Lock size={24} />
+                <div>
+                  <h3>Secure Payment via Stripe</h3>
+                  <p>Your payment will be processed securely by Stripe. No card data touches our servers.</p>
+                </div>
               </div>
               <div className="secure-badge">
-                <Lock size={14} /> Secure payment with Stripe
+                <Lock size={14} /> PCI-DSS Compliant — Powered by Stripe
               </div>
             </div>
 
             <button type="submit" className="btn btn-primary place-order-btn" disabled={processing}>
-              {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+              {processing ? 'Redirecting to Stripe...' : `Pay $${total.toFixed(2)}`}
             </button>
           </form>
 

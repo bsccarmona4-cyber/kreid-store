@@ -8,9 +8,14 @@ import json
 import sys
 from datetime import datetime
 
-# ─── Config ───────────────────────────────────────
-SUPABASE_URL = "https://tvntylcgdjvgvvjcavkp.supabase.co"
-SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2bnR5bGNnZGp2Z3Z2amNhdmtwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTkwOTU0NiwiZXhwIjoyMDk1NDg1NTQ2fQ.ixZ40COVYnHvGOjVInMfR9HQsTxqOBXvIWFILEWpVwQ"
+# ─── Config (desde variables de entorno) ──────────
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://tvntylcgdjvgvvjcavkp.supabase.co")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+if not SUPABASE_SERVICE_KEY:
+    print("❌ ERROR: SUPABASE_SERVICE_KEY no está configurada")
+    print("   Ejecuta: export SUPABASE_SERVICE_KEY='tu_service_role_key'")
+    print("   (La key está en el dashboard de Supabase > Settings > API > service_role key)")
+    sys.exit(1)
 
 PRODUCTS = [
     {
