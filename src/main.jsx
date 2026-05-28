@@ -12,6 +12,7 @@ import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Success from './pages/Success'
 import Account from './pages/Account'
+import Dashboard from './pages/Dashboard'
 import './styles/global.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/success" element={<Success />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Route>
         </Routes>
       </CartProvider>
