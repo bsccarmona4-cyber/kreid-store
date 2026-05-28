@@ -39,10 +39,9 @@ export default function Checkout() {
         quantity: item.quantity,
       }))
 
-      // Llamar a tu backend/serverless function para crear la Checkout Session
-      // Por ahora, redirigimos a un placeholder de Stripe
-      // En producción, necesitas un endpoint que cree la sesión con Stripe secret key
-      const response = await fetch('/api/create-checkout-session', {
+      // Stripe Checkout Session — SEGURO, PCI-DSS compliant
+      const STRIPE_SERVER = import.meta.env.VITE_STRIPE_SERVER_URL || 'http://localhost:3001'
+      const response = await fetch(`${STRIPE_SERVER}/api/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -55,15 +54,21 @@ export default function Checkout() {
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to create checkout session')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to create checkout session')
+      }
 
       const { url } = await response.json()
-      // Stripe Checkout Session redirect — SEGURO, PCI-DSS compliant
-      window.location.href = url
+      // Stripe Checkout redirige a stripe.com — el usuario paga allí y vuelve
+      if (url) {
+        window.location.href = url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
     } catch (err) {
       console.error('Checkout error:', err)
-      // Fallback: mostrar mensaje de que Stripe Checkout se configurará después
-      alert('🛒 Stripe Checkout Session próximamente. Por ahora, este es un placeholder seguro.')
+      alert(`❌ Error al procesar el pago: ${err.message}. Asegúrate de que el servidor Stripe esté corriendo en el puerto 3001.`)
       setProcessing(false)
     }
   }
