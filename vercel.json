@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/create-checkout-session.js": {
+      "memory": 128,
+      "maxDuration": 10
+    }
+  }
+}

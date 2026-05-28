@@ -26,3 +26,6 @@ npm-debug.log*
 
 # Env example (si lo creamos)
 .env.example
+
+# Stripe local server (ya no se usa - reemplazado por Vercel/Supabase Functions)
+server/

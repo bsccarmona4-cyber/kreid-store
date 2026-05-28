@@ -40,8 +40,10 @@ export default function Checkout() {
       }))
 
       // Stripe Checkout Session — SEGURO, PCI-DSS compliant
-      const STRIPE_SERVER = import.meta.env.VITE_STRIPE_SERVER_URL || 'http://localhost:3001'
-      const response = await fetch(`${STRIPE_SERVER}/api/create-checkout-session`, {
+      // En Vercel, la función vive en el mismo dominio (/api/...)
+      // En local, necesitas el servidor Stripe en otro puerto
+      const apiUrl = import.meta.env.VITE_STRIPE_API_URL || '/api/create-checkout-session'
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,7 +70,7 @@ export default function Checkout() {
       }
     } catch (err) {
       console.error('Checkout error:', err)
-      alert(`❌ Error al procesar el pago: ${err.message}. Asegúrate de que el servidor Stripe esté corriendo en el puerto 3001.`)
+      alert(`❌ Error al procesar el pago: ${err.message}. Si estás en local, asegúrate de que el servidor Stripe esté corriendo en el puerto 3001.`)
       setProcessing(false)
     }
   }
