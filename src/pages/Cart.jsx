@@ -11,6 +11,7 @@ export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice } = useCart()
   const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
   const total = totalPrice + shipping
+  const progressPct = Math.min(100, (totalPrice / FREE_SHIPPING_THRESHOLD) * 100)
 
   useEffect(() => {
     if (items.length > 0) {
@@ -38,10 +39,6 @@ export default function Cart() {
       </div>
     )
   }
-
-  const shipping = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-  const total = totalPrice + shipping
-  const progressPct = Math.min(100, (totalPrice / FREE_SHIPPING_THRESHOLD) * 100)
 
   return (
     <div className="cart-page">
