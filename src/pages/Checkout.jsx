@@ -70,6 +70,14 @@ export default function Checkout() {
           customer_name: form.name,
           success_url: `${window.location.origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/checkout`,
+          shipping_address: {
+            name: form.name,
+            line1: form.address,
+            city: form.city,
+            state: form.state,
+            postal_code: form.zip,
+            country: 'US',
+          },
         }),
       })
 

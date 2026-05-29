@@ -4,49 +4,42 @@
 import Stripe from 'stripe';
 
 export default async function handler(req, res) {
-  // ─── CORS ──────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // ─── Config desde env vars ─────────────────────
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+  if (!stripeKey) return res.status(500).json({ error: 'Stripe key not configured' });
 
-  if (!stripeKey) {
-    console.error('❌ STRIPE_SECRET_KEY no configurada');
-    return res.status(500).json({ error: 'Stripe key not configured' });
-  }
-
-  const stripe = new Stripe(stripeKey, {
-    apiVersion: '2025-02-24.acacia',
-  });
+  const stripe = new Stripe(stripeKey, { apiVersion: '2025-02-24.acacia' });
 
   try {
-    const { line_items, shipping_cost, email, customer_name, success_url, cancel_url } = req.body;
+    const { line_items, shipping_cost, email, customer_name, success_url, cancel_url, shipping_address } = req.body;
 
     if (!line_items || line_items.length === 0) {
       return res.status(400).json({ error: 'No items in cart' });
     }
 
-    // Validar estructura de line_items
+    // Validar cada item
     for (const item of line_items) {
       if (!item.price_data?.currency || !item.price_data?.unit_amount || !item.quantity) {
         return res.status(400).json({ error: 'Invalid line item structure' });
       }
     }
 
-    console.log(`📦 Creating checkout session for ${line_items.length} items...`);
+    // ✅ VALIDAR DIRECCIÓN — requerida para CJ
+    if (!shipping_address || !shipping_address.line1 || !shipping_address.city || !shipping_address.state || !shipping_address.postal_code || !shipping_address.name) {
+      return res.status(400).json({
+        error: 'Shipping address is required. Please fill in all fields: name, address, city, state, and ZIP code.',
+      });
+    }
 
-    // Crear la sesión de checkout en Stripe
+    console.log(`📦 Creating checkout session for ${line_items.length} items...`);
+    console.log(`📍 Shipping: ${shipping_address.name}, ${shipping_address.city}, ${shipping_address.state} ${shipping_address.postal_code}`);
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -80,15 +73,22 @@ export default async function handler(req, res) {
               },
             },
       ].filter(Boolean),
-      success_url: success_url || `${clientUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancel_url || `${clientUrl}/checkout`,
+      success_url: success_url || `${req.headers.origin || 'https://goose-dropshipping.vercel.app'}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancel_url || `${req.headers.origin || 'https://goose-dropshipping.vercel.app'}/checkout`,
       metadata: {
-        customer_name: customer_name || '',
+        customer_name: customer_name || shipping_address?.name || '',
         source: 'kreid-store',
+        // Guardar dirección en metadata como respaldo
+        shipping_name: shipping_address.name,
+        shipping_line1: shipping_address.line1,
+        shipping_city: shipping_address.city,
+        shipping_state: shipping_address.state,
+        shipping_zip: shipping_address.postal_code,
+        shipping_country: shipping_address.country || 'US',
       },
     });
 
-    console.log(`✅ Checkout session created: ${session.id} — $${(session.amount_total / 100).toFixed(2)}`);
+    console.log(`✅ Session: ${session.id} — $${(session.amount_total / 100).toFixed(2)}`);
 
     return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (err) {
