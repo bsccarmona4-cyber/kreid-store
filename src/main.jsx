@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout'
 import Success from './pages/Success'
 import Account from './pages/Account'
 import Dashboard from './pages/Dashboard'
+import ScrollToTop from './components/ScrollToTop'
 import './styles/global.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -20,6 +21,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
       <CartProvider>
+        <ScrollToTop />
         <Toaster position="top-right" toastOptions={{
           duration: 3000,
           style: { background: '#1a1a2e', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }

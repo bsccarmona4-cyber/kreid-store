@@ -62,6 +62,23 @@ export async function getMyOrders(userId) {
   return data || []
 }
 
+// ─── CJ Tracking ─────────────────────────────────
+export async function getOrderTracking(orderId) {
+  const { data, error } = await supabase.from('cj_orders').select('*').eq('order_id', orderId).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function getMyOrdersWithTracking(userId) {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*, cj_orders(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return orders || []
+}
+
 // ─── Coupon ───────────────────────────────────────
 export async function getCoupon(code) {
   const { data, error } = await supabase.from('coupons').select('*').eq('code', code).single()

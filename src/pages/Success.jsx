@@ -1,8 +1,5 @@
 // 🎉 KREID — Página de éxito post-pago
-// Esta es una página simple que se muestra después de un pago exitoso
-// Se usa tanto en React Router (/success) como HTML estático (/success.html)
-
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Package, Shield, Truck, Clock } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
@@ -11,17 +8,20 @@ import { trackPurchase } from '../lib/analytics'
 export default function Success() {
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
-  const [countdown, setCountdown] = useState(15)
   const { items, totalPrice, clearCart } = useCart()
 
-  // Track purchase + clear cart on mount
+  // Track purchase + LIMPIAR CARRITO al montar
   useEffect(() => {
+    // Siempre limpiar el carrito al llegar a Success
     if (sessionId && items.length > 0) {
       const shipping = totalPrice >= 45 ? 0 : 4.99
       trackPurchase(sessionId, items, totalPrice + shipping, shipping)
-      clearCart()
     }
-  }, [sessionId])
+    // Limpiar carrito pase lo que pase
+    clearCart()
+    // Scroll al inicio
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, []) // Solo al montar la página
 
   return (
     <div className="success-page">
@@ -44,6 +44,10 @@ export default function Success() {
             You'll receive a confirmation email shortly with your order details.
           </p>
 
+          <p className="success-webhook-note">
+            <small>🪝 Your order has been saved — check your <Link to="/account">Account</Link> for updates.</small>
+          </p>
+
           <div className="success-benefits">
             <div className="success-benefit">
               <Package size={18} />
@@ -63,8 +67,8 @@ export default function Success() {
             </div>
           </div>
 
-          <Link to="/" className="btn btn-primary btn-lg">
-            Continue Shopping {countdown > 0 && `(${countdown}s)`}
+          <Link to="/" className="btn btn-primary btn-lg" onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+            Continue Shopping
           </Link>
 
           <p className="success-footer">

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { User, Package, Calendar, MapPin, ChevronRight, LogOut, Mail, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase, getMyOrders, signUp, signIn, signOut } from '../lib/supabase'
+import { supabase, getMyOrdersWithTracking, signUp, signIn, signOut } from '../lib/supabase'
 
 export default function Account() {
   const { user, loading } = useAuth()
@@ -16,7 +16,7 @@ export default function Account() {
 
   useEffect(() => {
     if (user) {
-      getMyOrders(user.id).then(setOrders).catch(() => setOrders([]))
+      getMyOrdersWithTracking(user.id).then(setOrders).catch(() => setOrders([]))
     }
   }, [user])
 
@@ -135,16 +135,41 @@ export default function Account() {
               </div>
             ) : (
               <div className="account-orders">
-                {orders.map(order => (
-                  <div key={order.id} className="account-order-item">
-                    <div>
-                      <p className="order-id">Order #{order.id}</p>
-                      <p className="order-date">{new Date(order.created_at).toLocaleDateString()}</p>
+                {orders.map(order => {
+                  const cj = order.cj_orders?.[0]
+                  const trackingUrl = cj?.tracking_url || (cj?.tracking_number ? `https://track.cjdropshipping.com?trackNumber=${cj.tracking_number}` : null)
+                  return (
+                    <div key={order.id} className="account-order-item">
+                      <div>
+                        <p className="order-id">Order #{order.id}</p>
+                        <p className="order-date">{new Date(order.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                        <span className={`order-status ${order.status}`}>{order.status}</span>
+                        {cj && cj.tracking_number && (
+                          <a href={trackingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: '#06b6d4', textDecoration: 'none', fontWeight: 600 }}>
+                            📬 Track Package
+                          </a>
+                        )}
+                        {cj && !cj.tracking_number && (cj.cj_status === 'processing' || cj.cj_status === 'pending') && (
+                          <span style={{ fontSize: '13px', color: '#94a3b8' }}>🚚 Preparing order...</span>
+                        )}
+                      </div>
+                      <span className="order-total">${order.total?.toFixed(2)}</span>
+                      {cj && (cj.cj_order_number || cj.logistic_name || cj.tracking_number) && (
+                        <div style={{ width: '100%', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #1e293b', fontSize: '12px', color: '#94a3b8' }}>
+                          {cj.cj_order_number && <div>CJ Order #: {cj.cj_order_number}</div>}
+                          {cj.logistic_name && <div>Logistics: {cj.logistic_name}</div>}
+                          {cj.tracking_number && (
+                            <a href={trackingUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: 600 }}>
+                              📬 Track Package
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <span className={`order-status ${order.status}`}>{order.status}</span>
-                    <span className="order-total">${order.total?.toFixed(2)}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
