@@ -1,114 +1,135 @@
-// 🕸️ KREID — Stripe Webhook (Vercel Serverless) v5 - HYBRID APPROACH
-// Solo guarda la orden en Supabase + marca para CJ
-// El script local (cron) se encarga de enviar a CJ
+// KREID Stripe Webhook v6 - ULTRA SIMPLE
+// Usa Stripe SDK para verificar y procesar
+
+import Stripe from 'stripe';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, stripe-signature');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).end();
 
   try {
     const WS = process.env.STRIPE_WEBHOOK_SECRET;
+    const SK = process.env.STRIPE_SECRET_KEY;
     const SU = process.env.SUPABASE_URL;
     const SAK = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const SK = process.env.STRIPE_SECRET_KEY;
 
-    if (!WS || !SU || !SAK || !SK) {
-      return res.status(200).json({ ok: false, error: 'missing env vars' });
+    if (!WS || !SK || !SU || !SAK) {
+      console.error('Missing env vars');
+      return res.status(200).json({ ok: false });
     }
 
+    // Leer body
+    const buf = [];
+    for await (const c of req) buf.push(c);
+    const raw = Buffer.concat(buf);
+
+    // Verificar
+    const stripe = new Stripe(SK, { apiVersion: '2025-02-24.acacia' });
     const sig = req.headers['stripe-signature'];
-    if (!sig) return res.status(200).json({ ok: false, error: 'no sig' });
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(raw, sig, WS);
+    } catch (e) {
+      console.error('Signature error:', e.message);
+      return res.status(200).json({ ok: false, sigError: e.message });
+    }
 
-    const stripe = new (await import('stripe')).default(SK, { apiVersion: '2025-02-24.acacia' });
+    console.log(`Event: ${event.type}`);
 
-    // Leer body raw usando enfoque compatible con Vercel
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const rawBody = Buffer.concat(chunks);
-    const event = stripe.webhooks.constructEvent(rawBody, sig, WS);
-
-    const h = (m, e, b) => fetch(`${SU}${e}`, {
-      method: m,
-      headers: { 'apikey': SAK, 'Authorization': `Bearer ${SAK}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: b ? JSON.stringify(b) : undefined,
-    });
-
-    // Solo checkout completado
+    // Solo procesar checkout completado
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const s = event.data.object;
+      console.log(`Session: ${s.id} total=${s.amount_total} payment=${s.payment_status}`);
+
       const email = s.customer_details?.email || s.customer_email || '';
 
-      // Extraer shipping address
+      // Shipping address
       let sa = null;
       const sd = s.shipping_details || s.customer_details?.shipping;
       if (sd?.address) {
         sa = JSON.stringify({
-          name: sd.name || email.split('@')[0] || 'Customer',
+          name: sd.name || '',
           address: sd.address.line1 || '',
           address2: sd.address.line2 || '',
           city: sd.address.city || '',
           province: sd.address.state || '',
           zip: sd.address.postal_code || '',
           countryCode: sd.address.country || 'US',
-          country: sd.address.country === 'US' ? 'United States' : (sd.address.country || 'United States'),
           phone: sd.phone || '',
         });
       }
+      console.log(`Email: ${email} Shipping: ${sa ? 'yes' : 'no'}`);
 
-      // Obtener line items de Stripe (expandidos)
-      let items = [];
-      try {
-        const fs = await stripe.checkout.sessions.retrieve(s.id, { expand: ['line_items.data.price.product'] });
-        items = fs.line_items?.data || [];
-      } catch (e) {
-        console.error(`Error getting line items: ${e.message}`);
-        items = s.line_items?.data || [];
-      }
+      const h = (m, e, b) => fetch(`${SU}${e}`, {
+        method: m,
+        headers: {
+          'apikey': SAK,
+          'Authorization': `Bearer ${SAK}`,
+          'Content-Type': 'application/json',
+          ...(b ? { 'Prefer': 'return=representation' } : {}),
+        },
+        body: b ? JSON.stringify(b) : undefined,
+      });
 
       // Guardar orden
-      const orderPayload = {
+      const or = await h('POST', '/rest/v1/orders', {
         email,
         status: 'processing',
-        total: parseFloat(s.amount_total || 0) / 100,
-        shipping: (parseFloat(s.amount_total || 0) - parseFloat(s.amount_subtotal || 0)) / 100,
-        subtotal: parseFloat(s.amount_subtotal || 0) / 100,
+        total: (s.amount_total || 0) / 100,
+        shipping: ((s.amount_total || 0) - (s.amount_subtotal || 0)) / 100,
+        subtotal: (s.amount_subtotal || 0) / 100,
         shipping_address: sa,
         stripe_session_id: s.id,
-      };
+      });
 
-      const or = await h('POST', '/rest/v1/orders', orderPayload);
       if (!or.ok) {
-        const txt = await or.text();
-        console.error(`Order save error: ${or.status}: ${txt.slice(0,200)}`);
-        return res.status(200).json({ ok: false, error: `order: ${txt.slice(0,100)}` });
+        console.error(`Order error: ${or.status}`);
+        return res.status(200).json({ ok: false });
       }
 
-      const savedOrders = await or.json();
-      const order = savedOrders[0];
-      console.log(`✅ Order saved: ${order.id} | Items: ${items.length}`);
+      const order = (await or.json())[0];
+      console.log(`Order saved: ${order.id}`);
+
+      // Obtener line items de Stripe
+      let items = [];
+      try {
+        const fs = await stripe.checkout.sessions.retrieve(s.id, {
+          expand: ['line_items.data.price.product'],
+        });
+        items = fs.line_items?.data || [];
+      } catch (e) {
+        console.error(`Line items error: ${e.message}`);
+      }
+
+      console.log(`Items from Stripe: ${items.length}`);
 
       // Guardar items
       for (const li of items) {
         const p = li.price?.product || {};
-        await h('POST', '/rest/v1/order_items', {
+        const pi = {
           order_id: order.id,
           product_id: p.id || null,
           name: li.description || p.name || 'Unknown',
-          price: parseFloat(li.price?.unit_amount || 0) / 100,
+          price: (li.price?.unit_amount || 0) / 100,
           quantity: li.quantity || 1,
-          image_url: (p.images && p.images[0]) || null,
-        }).catch(() => {});
+        };
+        const ir = await h('POST', '/rest/v1/order_items', pi);
+        if (ir.ok) console.log(`  Item: ${pi.name}`);
+        else console.error(`  Item error: ${await ir.text()}`);
       }
-
-      console.log(`✅ Items saved: ${items.length}`);
     }
 
     return res.status(200).json({ ok: true });
   } catch (e) {
-    console.error(`Webhook error: ${e.message}`);
+    console.error(`Fatal: ${e.message}`);
     return res.status(200).json({ ok: false, error: e.message });
   }
 }
